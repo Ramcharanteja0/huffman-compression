@@ -36,8 +36,18 @@
             </form>
             <div id="compressResult" class="result"></div>
         </div>
+        <!-- Decompress Module -->
+        <div class="module-card">
+            <h2>3. Decompression & Output</h2>
+            <form id="decompressForm">
+                <div class="form-group">
+                    <input type="text" name="filename" id="decompressFilename" placeholder="example.txt.huff" required>
+                    <button type="submit">Decompress</button>
+                </div>
+            </form>
+            <div id="decompressResult" class="result"></div>
+        </div>
     </div>
-
     <script>
         document.getElementById('uploadForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -81,6 +91,9 @@
                     resDiv.style.display = 'block';
                     resDiv.style.color = 'var(--success-color)';
                     resDiv.innerHTML = `<strong>Success!</strong> Compression completed.<br>Compression Ratio: ${result.ratio}%<br><br><a href="/download_compressed/${result.compressed_filename}" download style="display:inline-block; padding:0.5rem 1rem; background:var(--primary-color); color:white; border-radius:4px; text-decoration:none; font-weight:bold;">Download .huff File</a>`;
+                    
+                    const decompInput = document.getElementById('decompressFilename');
+                    if(decompInput) decompInput.value = result.compressed_filename;
                 } else {
                     const resDiv = document.getElementById('compressResult');
                     resDiv.style.display = 'block';
@@ -89,6 +102,45 @@
                 }
             } catch (error) {
                 console.error('Error:', error);
+            }
+        });
+
+        document.getElementById('decompressForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const resDiv = document.getElementById('decompressResult');
+            resDiv.style.display = 'block';
+            resDiv.innerHTML = 'Processing...';
+            resDiv.style.color = 'inherit';
+            
+            try {
+                const response = await fetch('/decompress', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = document.getElementById('decompressFilename').value.replace('.huff', '');
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    window.URL.revokeObjectURL(url);
+                    
+                    resDiv.style.color = 'var(--success-color)';
+                    resDiv.innerHTML = '<strong>Success!</strong> File decompressed and downloaded.';
+                } else {
+                    const errorText = await response.text();
+                    resDiv.style.color = '#ef4444';
+                    resDiv.innerHTML = `<strong>Error!</strong> ${errorText}`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resDiv.style.color = '#ef4444';
+                resDiv.innerHTML = `<strong>Error!</strong> Something went wrong.`;
             }
         });
     </script>
