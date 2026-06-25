@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.pyo
+venv/
+env/
+.env
+
+# Application specific
+uploads/
+compressed/
+decompressed/
+*.huff

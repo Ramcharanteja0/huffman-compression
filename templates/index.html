@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Document Compression</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Digital Document Compression Platform</h1>
+        <div class="subtitle">using Huffman Coding</div>
+    </header>
+
+    <div class="container">
+        <!-- Upload Module -->
+        <div class="module-card">
+            <h2>1. File Management</h2>
+            <form id="uploadForm">
+                <div class="form-group">
+                    <input type="file" name="file" id="fileInput" required>
+                    <button type="submit">Upload File</button>
+                </div>
+            </form>
+            <div id="uploadResult" class="result"></div>
+        </div>
+
+        <!-- Compress Module -->
+        <div class="module-card">
+            <h2>2. Huffman Compression</h2>
+            <form id="compressForm">
+                <div class="form-group">
+                    <input type="text" name="filename" id="compressFilename" placeholder="example.txt" required>
+                    <button type="submit">Compress</button>
+                </div>
+            </form>
+            <div id="compressResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData();
+            const fileField = document.querySelector('input[type="file"]');
+            
+            formData.append('file', fileField.files[0]);
+            
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                
+                if(result.success) {
+                    const resDiv = document.getElementById('uploadResult');
+                    resDiv.style.display = 'block';
+                    resDiv.innerHTML = `<strong>Success!</strong> File uploaded.<br>Name: ${result.filename} <br>Original Size: ${result.size} Bytes`;
+                    // Auto-fill the compress input
+                    document.getElementById('compressFilename').value = result.filename;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+
+        document.getElementById('compressForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            
+            try {
+                const response = await fetch('/compress', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                
+                if(result.success) {
+                    const resDiv = document.getElementById('compressResult');
+                    resDiv.style.display = 'block';
+                    resDiv.style.color = 'var(--success-color)';
+                    resDiv.innerHTML = `<strong>Success!</strong> Compression completed.<br>Compression Ratio: ${result.ratio}%<br><br><a href="/download_compressed/${result.compressed_filename}" download style="display:inline-block; padding:0.5rem 1rem; background:var(--primary-color); color:white; border-radius:4px; text-decoration:none; font-weight:bold;">Download .huff File</a>`;
+                } else {
+                    const resDiv = document.getElementById('compressResult');
+                    resDiv.style.display = 'block';
+                    resDiv.style.color = '#ef4444'; // Red color for errors
+                    resDiv.innerHTML = `<strong>Error!</strong> ${result.error}`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+    </script>
+</body>
+</html>
