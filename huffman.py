@@ -137,13 +137,7 @@ def compress_file(input_file,output_file):
 
 
 
-    encoded=""
-
-
-
-    for char in text:
-
-        encoded+=codes[char]
+    encoded = "".join(codes[char] for char in text)
 
 
 
